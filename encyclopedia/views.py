@@ -73,17 +73,22 @@ def edit(request, title):
 
 def search(request):
     entries = util.list_entries()
-    entries = [entry.lower() for entry in entries]
+    lowercase_entries = [entry.lower() for entry in entries]
 
     query = request.GET.get("q", "")
-    query = query.lower()
-
+    lowercase_query = query.lower()
     
     if (query in entries):
-        return redirect("entry", query)
+        return redirect("entry", lowercase_query)
 
-    results = [entry for entry in entries if query in entry]
+    results = []
+    for i in range(len(entries)):
+        if (lowercase_query in lowercase_entries[i]):
+            results.append(entries[i])
+
     return render(request, "encyclopedia/searchResults.html", {
+        "query": query,
+        "no_results": not results,
         "entries": results
     })
 

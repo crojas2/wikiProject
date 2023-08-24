@@ -182,6 +182,54 @@ class EditViewTest(TestCase):
         # Check if the form has errors
         self.assertTrue(response.context['form'].errors)
 
+class SearchViewTest(TestCase):
+    def setUp(self):
+        self.entries_list = ['Python', 'Django', 'HTML']
+
+    def test_search_view_exact_match(self):
+        # Mock the 'list_entries' function to return a list of entries
+        with patch.object(util, 'list_entries', return_value=self.entries_list):
+            search_query = self.entries_list[0]
+            response = self.client.get(reverse('search'), {'q': search_query})
+
+        self.assertEqual(response.status_code, 302)  # Check if the view redirects to the entry page
+
+        # Check if the view redirects to the correct entry
+        self.assertRedirects(response, reverse('entry', args=[search_query.lower()]))
+
+    def test_search_view_no_results(self):
+        # Mock the 'list_entries' function to return a list of entries
+        with patch.object(util, 'list_entries', return_value=self.entries_list):
+            # Define a search query with no matching results
+            search_query = 'CSS'
+
+            response = self.client.get(reverse('search'), {'q': search_query})
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used (displaying search results)
+        self.assertTemplateUsed(response, 'encyclopedia/searchResults.html')
+
+        # Check if no results are displayed in the response content
+        self.assertContains(response, 'No results found for "CSS"')
+
+    def test_search_view_with_results(self):
+        # Mock the 'list_entries' function to return a list of entries
+        with patch.object(util, 'list_entries', return_value=self.entries_list):
+            # Define a search query with matching results
+            search_query = 'Py'
+
+            # Create a GET request with the search query
+            response = self.client.get(reverse('search'), {'q': search_query})
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used (displaying search results)
+        self.assertTemplateUsed(response, 'encyclopedia/searchResults.html')
+
+        # Check if the search results are displayed in the response content
+        self.assertContains(response, '<a href="/wiki/Python/"')  # Check if 'Python' is in the response
+
 # Forms Tests
 class CreateEntryFormTest(TestCase):
     def test_create_form_valid_data(self):
