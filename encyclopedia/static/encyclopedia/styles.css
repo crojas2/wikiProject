@@ -20,6 +20,7 @@ textarea {
 
 .main {
     padding: 10px;
+    height: 100vh;
 }
 
 .search {
@@ -36,4 +37,8 @@ textarea {
 
 .sidebar h2 {
     margin-top: 5px;
+}
+
+.entry {
+    height: 100%;
 }

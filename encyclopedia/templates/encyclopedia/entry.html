@@ -5,12 +5,18 @@
 {% endblock %}
 
 {% block body %}
-<div>
-    {{ content | safe }}
-</div>
-<div>
-    <a href="{% url 'edit' title %}">Edit Page</a>
-</div>
 
+<div class="container">
+    <div class="entry card mb-3">
+        <div class="card-body p-4">
+            <p>{{ content | safe }}</p>
+            <hr class="mt-0 mb-4">
+
+            <div class="d-flex justify-content-center">
+                <a class="btn btn-primary" href="{% url 'edit' title %}">Edit</a>
+            </div> 
+        </div>
+    </div>
+</div>
 
 {% endblock %}
