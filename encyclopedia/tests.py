@@ -36,3 +36,38 @@ class IndexViewTest(TestCase):
         # Check if there are no entries displayed on the page
         self.assertEqual(len(response.context['entries']), 0)  # Check the number of entries on the page
         self.assertEqual(response.context['entries'].paginator.num_pages, 1)  # Check the number of pages
+
+class EncyclopediaEntryViewTest(TestCase):
+    def test_entry_view_with_existing_entry(self):
+        title = "Test Entry"
+        content = "This is a test entry content."
+
+        # Mock the 'get_entry' function to return the test entry content
+        with patch.object(util, 'get_entry', return_value=content):
+            response = self.client.get(reverse('entry', args=[title]))
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used
+        self.assertTemplateUsed(response, 'encyclopedia/entry.html')
+
+        # Check if the rendered content matches the test entry content
+        self.assertContains(response, title)  # Check if the title is displayed
+        self.assertContains(response, content)  # Check if the content is displayed
+
+    def test_entry_view_with_nonexistent_entry(self):
+        # Define a test entry title that does not exist
+        title = "Nonexistent Entry"
+
+        # Mock the 'get_entry' function to return None (indicating a nonexistent entry)
+        with patch.object(util, 'get_entry', return_value=None):
+            response = self.client.get(reverse('entry', args=[title]))
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used
+        self.assertTemplateUsed(response, 'encyclopedia/error.html')
+
+        # Check if the error message indicates that the entry was not found
+        self.assertContains(response, title)  # Check if the title is displayed
+        self.assertContains(response, "Not Found")  # Check if the "Not Found" message is displayed

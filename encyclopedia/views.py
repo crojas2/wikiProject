@@ -6,7 +6,6 @@ import random as rand
 
 from . import util
 
-
 def index(request):
     paginator = Paginator(util.list_entries(), 10)
     page_num = request.GET.get('page')
