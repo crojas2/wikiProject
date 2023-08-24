@@ -27,6 +27,31 @@ def entry(request, title):
             "title": title,
             "message": "Not Found"
         })
+    
+def create(request):
+    if request.method == "POST":
+        form = NewEntryForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data["title"]
+            content = form.cleaned_data["content"]
+
+            if (util.get_entry(title)):
+                return render(request, "encyclopedia/create.html", {
+                    "message": "Entry with Title Already Exists!",
+                    "form": form
+                })
+            else:
+                util.save_entry(title, content)
+                return redirect("entry", title)
+        else:
+            return render(request, "encyclopedia/create.html", {
+                    "message": form.errors,
+                    "form": form
+                })
+
+    return render(request, "encyclopedia/create.html", {
+            "form": NewEntryForm()
+        })
 
 def edit(request, title):
     if request.method == "POST":
@@ -70,25 +95,3 @@ def random(request):
         "title": entry,
         "content": markdown2.markdown(util.get_entry(entry))
     })
-
-
-def create(request):
-    if request.method == "POST":
-        form = NewEntryForm(request.POST)
-        if form.is_valid():
-            title = form.cleaned_data["title"]
-            content = form.cleaned_data["content"]
-
-            if (util.get_entry(title)):
-                return render(request, "encyclopedia/error.html", {
-                    "title": title,
-                    "message": "Already Exists"
-                }) 
-            else:
-                util.save_entry(title, content)
-                return redirect("entry", title)
-        
-
-    return render(request, "encyclopedia/newPage.html", {
-            "form": NewEntryForm()
-        })

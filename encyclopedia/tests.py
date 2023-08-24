@@ -5,7 +5,7 @@ from django.urls import reverse
 from unittest.mock import patch
 
 from . import util
-from .forms import EditEntryForm
+from .forms import EditEntryForm, NewEntryForm
 
 # Views Tests
 class IndexViewTest(TestCase):
@@ -75,6 +75,65 @@ class EntryViewTest(TestCase):
         self.assertContains(response, title)  # Check if the title is displayed
         self.assertContains(response, "Not Found")  # Check if the "Not Found" message is displayed
 
+class CreateViewTest(TestCase):
+    def setUp(self):
+        self.test_data = {
+            'title': 'Test Entry',
+            'content': 'Test content',
+        }
+
+    def test_create_view_GET(self):
+        response = self.client.get(reverse('create'))
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used
+        self.assertTemplateUsed(response, 'encyclopedia/create.html')
+
+        # Check if the form is an instance of NewEntryForm
+        self.assertIsInstance(response.context['form'], NewEntryForm)
+
+    def test_create_view_POST_valid_data(self):
+        # Mock the 'get_entry' and 'save_entry' functions
+        with patch.object(util, 'get_entry', return_value=None):
+            with patch.object(util, 'save_entry', return_value=None) as mock_save_entry:
+                response = self.client.post(reverse('create'), data=self.test_data)
+
+                self.assertEqual(response.status_code, 302)  # Check if the view redirects to the entry page
+
+                # Check if the 'save_entry' function was called with the updated content
+                mock_save_entry.assert_called_once_with(self.test_data['title'], self.test_data['content'])
+
+    def test_create_view_POST_existing_entry(self):
+        # Mock the 'get_entry' and 'save_entry' functions
+        with patch.object(util, 'get_entry', return_value="Existing Content"):
+            response = self.client.post(reverse('create'), data=self.test_data)                
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used (re-rendering the create form)
+        self.assertTemplateUsed(response, 'encyclopedia/create.html')
+
+        # Check if the error message is displayed
+        self.assertContains(response, 'Already Exists')
+
+    def test_create_view_POST_invalid_data(self):
+        invalid_form_data = {
+            'content': 'Invalid content.',
+        }
+
+        # Mock the 'get_entry' function to return None (indicating a new entry)
+        with patch.object(util, 'get_entry', return_value=None):
+            response = self.client.post(reverse('create'), data=invalid_form_data)
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used (re-rendering the create form)
+        self.assertTemplateUsed(response, 'encyclopedia/create.html')
+
+        # Check if the form has errors
+        self.assertTrue(response.context['form'].errors)
+
 class EditViewTest(TestCase):
     def setUp(self):
         self.test_data = {
@@ -124,6 +183,25 @@ class EditViewTest(TestCase):
         self.assertTrue(response.context['form'].errors)
 
 # Forms Tests
+class CreateEntryFormTest(TestCase):
+    def test_create_form_valid_data(self):
+        form_data = {
+            'title': 'Test Title',
+            'content': 'This is a test content.',
+        }
+
+        form = NewEntryForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_create_form_invalid_data(self):
+        form_data = {
+            'content': 'This is a test content.',
+        }
+
+        form = NewEntryForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)
+
 class EditEntryFormTest(TestCase):
     def test_edit_form_valid_data(self):
         form_data = {
