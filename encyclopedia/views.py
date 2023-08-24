@@ -1,14 +1,19 @@
-from django.shortcuts import render
-from django.shortcuts import redirect
+from django.core.paginator import Paginator
+from django.shortcuts import render, redirect
 from django import forms
-
-from . import util
 import markdown2
 import random as rand
 
+from . import util
+
+
 def index(request):
+    paginator = Paginator(util.list_entries(), 10)
+    page_num = request.GET.get('page')
+    page_obj = paginator.get_page(page_num)
+
     return render(request, "encyclopedia/index.html", {
-        "entries": util.list_entries()
+        "entries": page_obj
     })
 
 def entry(request, title):

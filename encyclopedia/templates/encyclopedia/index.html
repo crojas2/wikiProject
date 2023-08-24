@@ -7,10 +7,42 @@
 {% block body %}
     <h1>All Pages</h1>
 
-    <ul>
+    <div class="list-group">
         {% for entry in entries %}
-            <li><a href = "/wiki/{{ entry }}"> {{ entry }} </a></li>
+        <a href="{% url 'entry' entry %}" class="list-group-item list-group-item-action flex-column align-items-start">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ entry }}</h5>
+            <small>last updated 3 days ago</small>
+          </div>
+          <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit...</p>
+        </a>
         {% endfor %}
-    </ul>
+    </div>
+
+    {% if entries.has_previous or entries.has_next %}
+    <nav>
+      <ul class="pagination">
+        {% if entries.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ entries.previous_page_number }}">PREV</a></li>
+        {% else %}
+            <li class="page-item"><a class="page-link">PREV</a></li>
+        {% endif %}
+  
+        {% for num in entries.paginator.page_range %}
+          {% if entries.number == num %}
+            <li class="page-item"><a class="page-link active">{{ num }}</a></li>
+          {% else%}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+  
+        {% if entries.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ entries.next_page_number }}">NEXT</a></li>
+        {% else %}
+            <li class="page-item"><a class="page-link">NEXT</a></li>
+        {% endif %}
+      </ul>    
+    </nav>
+    {% endif %}
 
 {% endblock %}
