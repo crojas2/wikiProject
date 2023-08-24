@@ -1,3 +1,4 @@
 .env
 .vs/
 db.sqlite3
+__pycache__/
