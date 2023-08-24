@@ -1,10 +1,13 @@
-from django.test import TestCase
 from django.core.paginator import Page
+from django.test import TestCase
 from django.urls import reverse
+
 from unittest.mock import patch
 
 from . import util
+from .forms import EditEntryForm
 
+# Views Tests
 class IndexViewTest(TestCase):
     def test_index_view_with_entries(self):
         entries = ["Entry1", "Entry2", "Entry3", "Entry4", "Entry5", "Entry6", "Entry7", "Entry8", "Entry9", "Entry10", "Entry11"]
@@ -37,7 +40,7 @@ class IndexViewTest(TestCase):
         self.assertEqual(len(response.context['entries']), 0)  # Check the number of entries on the page
         self.assertEqual(response.context['entries'].paginator.num_pages, 1)  # Check the number of pages
 
-class EncyclopediaEntryViewTest(TestCase):
+class EntryViewTest(TestCase):
     def test_entry_view_with_existing_entry(self):
         title = "Test Entry"
         content = "This is a test entry content."
@@ -71,3 +74,71 @@ class EncyclopediaEntryViewTest(TestCase):
         # Check if the error message indicates that the entry was not found
         self.assertContains(response, title)  # Check if the title is displayed
         self.assertContains(response, "Not Found")  # Check if the "Not Found" message is displayed
+
+class EditViewTest(TestCase):
+    def setUp(self):
+        self.test_data = {
+            'title': 'Test Entry',
+            'original_content': 'Test content',
+            'updated_content': 'Updated content.'
+        }
+
+    def test_edit_view_GET(self):
+        # Mock the 'get_entry' function to return test content
+        with patch.object(util, 'get_entry', return_value=self.test_data['original_content']):
+            response = self.client.get(reverse('edit', args=[self.test_data['title']]))
+
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used
+        self.assertTemplateUsed(response, 'encyclopedia/edit.html')
+
+        # Check if the form is initialized with the entry's title and content
+        self.assertIsInstance(response.context['form'], EditEntryForm)
+        self.assertEqual(response.context['form'].initial['title'], self.test_data['title'])
+        self.assertEqual(response.context['form'].initial['content'], self.test_data['original_content'])
+
+    def test_edit_view_POST_valid_data(self):
+        # Mock the 'get_entry' and 'save_entry' functions
+        with patch.object(util, 'get_entry', return_value=self.test_data['original_content']):
+            with patch.object(util, 'save_entry', return_value=None) as mock_save_entry:
+                data = {
+                    'title': self.test_data['title'],
+                    'content': self.test_data['updated_content']
+                }
+                response = self.client.post(reverse('edit', args=[self.test_data['title']]), data=data)
+
+                self.assertEqual(response.status_code, 302)  # Check if the view redirects to the entry page
+
+                # Check if the 'save_entry' function was called with the updated content
+                mock_save_entry.assert_called_once_with(self.test_data['title'], self.test_data['updated_content'])
+
+    def test_edit_view_POST_invalid_data(self):
+        response = self.client.post(reverse('edit', args=[self.test_data['title']]), data={'title': self.test_data['title'], 'content': ""})
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a 200 status code
+
+        # Check if the correct template is used (re-rendering the edit form)
+        self.assertTemplateUsed(response, 'encyclopedia/edit.html')
+
+        # Check if the form has errors
+        self.assertTrue(response.context['form'].errors)
+
+# Forms Tests
+class EditEntryFormTest(TestCase):
+    def test_edit_form_valid_data(self):
+        form_data = {
+            'title': 'Test Title',
+            'content': 'This is a test content.',
+        }
+
+        form = EditEntryForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_edit_form_invalid_data(self):
+        form_data = {
+            'content': 'This is a test content.',
+        }
+
+        form = EditEntryForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('title', form.errors)

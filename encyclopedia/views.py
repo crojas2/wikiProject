@@ -1,10 +1,10 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
-from django import forms
 import markdown2
 import random as rand
 
 from . import util
+from .forms import EditEntryForm, NewEntryForm
 
 def index(request):
     paginator = Paginator(util.list_entries(), 10)
@@ -26,6 +26,24 @@ def entry(request, title):
         return render(request, "encyclopedia/error.html", {
             "title": title,
             "message": "Not Found"
+        })
+
+def edit(request, title):
+    if request.method == "POST":
+        form = EditEntryForm(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data["content"]
+            util.save_entry(title, content)
+            return redirect("entry", title)
+        else:
+            return render(request, "encyclopedia/edit.html", {
+                'title': title,
+                'form': form
+            })
+            
+    return render(request, "encyclopedia/edit.html", {
+            "title": title,
+            "form": EditEntryForm(initial={"title": title, "content": util.get_entry(title)})
         })
 
 def search(request):
@@ -54,11 +72,6 @@ def random(request):
     })
 
 
-class NewEntryForm(forms.Form):
-    title = forms.CharField(label="Title", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    content = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control'}))
-
-
 def create(request):
     if request.method == "POST":
         form = NewEntryForm(request.POST)
@@ -78,21 +91,4 @@ def create(request):
 
     return render(request, "encyclopedia/newPage.html", {
             "form": NewEntryForm()
-        })
-
-class EditEntryForm(forms.Form):
-    title = forms.CharField(label="Title", widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}))
-    content = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control'}))
-
-def edit(request, title):
-    if request.method == "POST":
-        form = EditEntryForm(request.POST)
-        if form.is_valid():
-            content = form.cleaned_data["content"]
-            util.save_entry(title, content)
-            return redirect("entry", title)
-            
-    return render(request, "encyclopedia/editPage.html", {
-            "title": title,
-            "form": EditEntryForm(initial={"title": title, "content": util.get_entry(title)})
         })
