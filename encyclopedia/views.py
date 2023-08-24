@@ -96,7 +96,4 @@ def random(request):
     entries = util.list_entries()
     entry = rand.choice(entries)
 
-    return render(request, "encyclopedia/entry.html", {
-        "title": entry,
-        "content": markdown2.markdown(util.get_entry(entry))
-    })
+    return redirect("entry", entry)

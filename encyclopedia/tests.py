@@ -230,6 +230,24 @@ class SearchViewTest(TestCase):
         # Check if the search results are displayed in the response content
         self.assertContains(response, '<a href="/wiki/Python/"')  # Check if 'Python' is in the response
 
+class RandomViewTest(TestCase):
+    #Ensure 'Python' is returned when calling rand.choice(entries)
+    @patch('random.choice', side_effect=lambda entries: 'Python')
+
+    def test_random_view(self, random_choice_mock):
+        entries_list = ['Python', 'Django', 'HTML']
+        with patch.object(util, 'list_entries', return_value=entries_list):
+            # Create a GET request to the random view
+            response = self.client.get(reverse('random'))
+
+        self.assertEqual(response.status_code, 302)  # Check if the view redirects to the entry page
+
+        # Check if the view redirects to the correct entry
+        self.assertRedirects(response, reverse('entry', args=['Python']))
+
+        # Ensure that the random.choice function was called
+        random_choice_mock.assert_called_once_with(entries_list)
+
 # Forms Tests
 class CreateEntryFormTest(TestCase):
     def test_create_form_valid_data(self):
