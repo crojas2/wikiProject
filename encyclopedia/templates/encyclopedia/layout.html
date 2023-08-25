@@ -5,32 +5,76 @@
 <html lang="en">
     <head>
         <title>{% block title %}{% endblock %}</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="shortcut icon" href="{% static 'encyclopedia/images/favicon.ico' %}" type="image/x-icon"> 
         <link href="{% static 'encyclopedia/styles.css' %}" rel="stylesheet">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script defer src="{% static 'encyclopedia/fontawesome.min.js' %}"></script>
+        <script defer src="{% static 'encyclopedia/solid.min.js' %}"></script>
     </head>
     <body>
-        <div class="row">
-            <div class="sidebar col-lg-2 col-md-3">
-                <h2>Wiki</h2>
-                <form action="{% url 'search' %}">
-                    <input class="search" type="text" name="q" placeholder="Search">
-                </form>
-                <div>
-                    <a href="{% url 'index' %}">Home</a>
+        <div class="wrapper">
+            <!-- Sidebar -->
+            <nav id="sidebar">
+                <a id="sidebarToggle">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+                <div class="full-header">
+                    <img src="{% static 'encyclopedia/images/logo-white-180x180.png' %}">
+                    <h2>Wiki</h2>
                 </div>
-                <div>
-                    <a href="{% url 'create' %}">Create New Page</a>
+                <div class="small-header">
+                    <img src="{% static 'encyclopedia/images/favicon.ico' %}">
                 </div>
-                <div>
-                    <a href="{% url 'random' %}">Random Page</a>
-                </div>
-                {% block nav %}
-                {% endblock %}
-            </div>
-            <div class="main col-lg-10 col-md-9">
+                <br>
+                <ul class="list-unstyled">
+                    <form action="{% url 'search' %}">
+                        <input class="search" type="text" name="q" placeholder="Search">
+                    </form>
+                    <br>
+                    <li>
+                        <a href="{% url 'index' %}">
+                            <i class="fa-solid fa-home"></i>
+                            Home
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="{% url 'create' %}">
+                            <i class="fa-solid fa-plus"></i>
+                            Create New Page
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="{% url 'random' %}">
+                            <i class="fa-solid fa-shuffle"></i>
+                            Random Page
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Page Content -->
+            <div id="main">
                 {% block body %}
                 {% endblock %}
             </div>
         </div>
+        <script type="text/javascript">
+            document.addEventListener("DOMContentLoaded", function () {
+                var sidebarToggle = document.getElementById("sidebarToggle");
+                sidebarToggle.addEventListener("click", function () {
+                    document.getElementById("sidebar").classList.toggle("active");
+                    document.getElementById("main").classList.toggle("active");   
+
+                    var icon = sidebarToggle.querySelector("svg");
+                    if (icon.classList.contains("fa-angles-left")) {
+                        icon.classList.replace("fa-angles-left", "fa-angles-right");
+                    } else {
+                        icon.classList.replace("fa-angles-right", "fa-angles-left");
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
